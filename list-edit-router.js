@@ -1,43 +1,72 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
 
 module.exports = (tasks, taskIdCounter) => {
-  router.post('/create-task', (req, res) => {
+  const validateRequestBody = (req, res, next) => {
+    if (req.method === "POST" && Object.keys(req.body).length === 0) {
+      res.status(400).json({ error: "La solicitud no tiene información." });
+    } else if (
+      req.method === "POST" &&
+      (!req.body.description || typeof req.body.description !== "string")
+    ) {
+      res
+        .status(400)
+        .json({ error: "La solicitud no contiene una descripción válida." });
+    } else if (req.method === "PUT" && Object.keys(req.body).length === 0) {
+      res.status(400).json({ error: "La solicitud no tiene información." });
+    } else if (
+      req.method === "PUT" &&
+      (req.body.completed === undefined ||
+        typeof req.body.completed !== "boolean")
+    ) {
+      res.status(400).json({
+        error: "La solicitud no contiene un estado válido.",
+      });
+    } else {
+      next();
+    }
+  };
+
+  router.post("/create-task", validateRequestBody, (req, res) => {
     const { description } = req.body;
     const id = taskIdCounter++;
 
     const task = {
       id,
       description,
-      completed: false
+      completed: false,
     };
 
     tasks.push(task);
 
-    res.json({ message: 'La tarea se añadió correctamente.', task });
+    res.json({ message: "La tarea se añadió correctamente.", task });
   });
 
-  router.delete('/delete-task/:id', (req, res) => {
+  router.delete("/delete-task/:id", (req, res) => {
     const id = parseInt(req.params.id);
 
-    const taskIndex = tasks.findIndex(task => task.id === id);
+    const taskIndex = tasks.findIndex((task) => task.id === id);
     if (taskIndex !== -1) {
       tasks.splice(taskIndex, 1);
-      res.json({ message: 'Tarea eliminada con éxito.' });
+      res.json({ message: "Tarea eliminada con éxito." });
     } else {
-      res.status(404).json({ error: 'No se encontró la tarea con el ID proporcionado.' });
+      res
+        .status(404)
+        .json({ error: "No se encontró la tarea con el ID proporcionado." });
     }
   });
 
-  router.put('/update-task/:id', (req, res) => {
+  router.put("/update-task/:id", validateRequestBody, (req, res) => {
     const id = parseInt(req.params.id);
 
-    const task = tasks.find(task => task.id === id);
+    const task = tasks.find((task) => task.id === id);
     if (task) {
-      task.completed = true;
-      res.json({ message: 'Tarea completada.', task });
+      task.completed = req.body.completed;
+      res.json({ message: "Tarea actualizada.", task });
     } else {
-      res.status(404).json({ error: 'No se encontró la tarea con el ID proporcionado.' });
+      res
+        .status(404)
+        .json({ error: "No se encontró la tarea con el ID proporcionado." });
     }
   });
 
