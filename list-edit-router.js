@@ -27,7 +27,7 @@ module.exports = (tasks, taskIdCounter) => {
     }
   };
 
-  router.post("/create-task", validateRequestBody, (req, res) => {
+  router.post("/", validateRequestBody, (req, res) => {
     const { description } = req.body;
     const id = taskIdCounter++;
 
@@ -39,34 +39,30 @@ module.exports = (tasks, taskIdCounter) => {
 
     tasks.push(task);
 
-    res.json({ message: "La tarea se añadió correctamente.", task });
+    res.status(201).json({ message: "La tarea se añadió correctamente.", task });
   });
 
-  router.delete("/delete-task/:id", (req, res) => {
+  router.delete("/:id", (req, res) => {
     const id = parseInt(req.params.id);
 
-    const taskIndex = tasks.findIndex((task) => task.id === id);
+    const taskIndex = tasks.findIndex(task => task.id === id);
     if (taskIndex !== -1) {
       tasks.splice(taskIndex, 1);
       res.json({ message: "Tarea eliminada con éxito." });
     } else {
-      res
-        .status(404)
-        .json({ error: "No se encontró la tarea con el ID proporcionado." });
+      res.status(404).json({ error: "No se encontró la tarea con el ID proporcionado." });
     }
   });
 
-  router.put("/update-task/:id", validateRequestBody, (req, res) => {
+  router.put("/:id", validateRequestBody, (req, res) => {
     const id = parseInt(req.params.id);
 
-    const task = tasks.find((task) => task.id === id);
+    const task = tasks.find(task => task.id === id);
     if (task) {
       task.completed = req.body.completed;
       res.json({ message: "Tarea actualizada.", task });
     } else {
-      res
-        .status(404)
-        .json({ error: "No se encontró la tarea con el ID proporcionado." });
+      res.status(404).json({ error: "No se encontró la tarea con el ID proporcionado." });
     }
   });
 
